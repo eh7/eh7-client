@@ -126,6 +126,12 @@ PeerId.createFromJSON(nodeId,(err,nodeId) => {
         }
       })
 
+      var exec = require('child_process').exec;
+      exec('ls', function callback(error, stdout, stderr){
+        // result
+        console.log("exec stdout-> ", error, stdout, stderr)
+      })
+
     })
 
     node.on('peer:disconnect', (peer) => {
