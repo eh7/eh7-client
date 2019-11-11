@@ -13,8 +13,11 @@ const defaultsDeep = require('@nodeutils/defaults-deep')
 const PeerInfo = require('peer-info')
 const PeerId   = require('peer-id')
 const pull = require('pull-stream')
+const Pushable = require('pull-pushable')
+const p = Pushable()
 
 const bootstrapers = [
+  '/ip4/192.168.1.12/tcp/10333/ipfs/QmZiicp2DZuf9Xc9mNiMkc3hiDz4KipoiNzFZbhxLK9Do1',
   '/ip4/10.0.0.10/tcp/10333/ipfs/QmZiicp2DZuf9Xc9mNiMkc3hiDz4KipoiNzFZbhxLK9Do1'
 ]
 
@@ -83,16 +86,51 @@ PeerId.createFromJSON(nodeId,(err,nodeId) => {
     node.on('peer:discovery', (peer) => {
       // No need to dial, autoDial is on
       console.log('Discovered:', peer.id.toB58String())
-      node.pubsub.publish('info', Buffer.from('discovered ' +  peer.id.toB58String() + ' here!!!'), (err) => {if(err)console.log(err)})
+//      node.pubsub.publish('info', Buffer.from('discovered ' +  peer.id.toB58String() + ' here!!!'), (err) => {if(err)console.log(err)})
     })
 
     node.on('peer:connect', (peer) => {
       console.log('Connection established to:', peer.id.toB58String())
+
+      node.dialProtocol(peer.id,'/eh7/chat',(err,conn) => {
+        if(err) console.log(err)
+        else {
+/*
+          pull(
+            pull.values(["hello big"]),
+            conn
+          )
+*/
+          console.log("(node) dialed to bootNode '/eh7/chat' -> hello")
+         console.log('node dialed to bootNode on protocol: /eh7/chat')
+          console.log('Type a message and see what happens')
+          // Write operation. Data sent as a buffer
+          pull(
+            p,
+            conn
+          )
+          // Sink, data converted from buffer to utf8 string
+          pull(
+            conn,
+            pull.map((data) => {
+              return data.toString('utf8').replace('\n', '')
+            }),
+            pull.drain(console.log)
+          )
+
+          process.stdin.setEncoding('utf8')
+          process.openStdin().on('data', (chunk) => {
+            var data = chunk.toString()
+            p.push(data)
+          })
+        }
+      })
+
     })
 
     node.on('peer:disconnect', (peer) => {
       console.log("peer:disconnect: ", peer.id.toB58String())
-      node.pubsub.publish('info', Buffer.from('by boot server from ' +  peer.id.toB58String() + ' here!!!'), (err) => {if(err)console.log(err)})
+//      node.pubsub.publish('info', Buffer.from('by boot server from ' +  peer.id.toB58String() + ' here!!!'), (err) => {if(err)console.log(err)})
     })
 
   }
@@ -116,7 +154,7 @@ PeerId.createFromJSON(bootNode0Id,(err,bootNodeId) => {
     })
 
     bootNode.on('peer:discovery', (peer) => {
-      console.log("peer:discovery: ", peer)
+//      console.log("peer:discovery: ", peer)
     })
 
     bootNode.on('peer:connect', (peer) => {
