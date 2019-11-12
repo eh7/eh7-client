@@ -58,8 +58,6 @@ const nodeId = require('./peer-id-dialer.json')
 let node
 
 PeerId.createFromJSON(nodeId,(err,nodeId) => {
-//PeerId.create((err,nodeId) => {
-//const nodeId = PeerId.create((err,nodeId) => {
   if(err) console.log(err)
   else {
     const nodeInfo = new PeerInfo(nodeId)
@@ -114,17 +112,12 @@ PeerId.createFromJSON(nodeId,(err,nodeId) => {
     node.on('peer:connect', (peer) => {
       console.log('Connection established to:', peer.id.toB58String())
 
+/*
       node.dialProtocol(peer.id,'/eh7/chat',(err,conn) => {
         if(err) console.log(err)
         else {
-/*
-          pull(
-            pull.values(["hello big"]),
-            conn
-          )
-*/
           console.log("(node) dialed to bootNode '/eh7/chat' -> hello")
-         console.log('node dialed to bootNode on protocol: /eh7/chat')
+          console.log('node dialed to bootNode on protocol: /eh7/chat')
           console.log('Type a message and see what happens')
           // Write operation. Data sent as a buffer
           pull(
@@ -147,6 +140,7 @@ PeerId.createFromJSON(nodeId,(err,nodeId) => {
           })
         }
       })
+*/
 
 /*
       var exec = require('child_process').exec;
@@ -166,108 +160,3 @@ PeerId.createFromJSON(nodeId,(err,nodeId) => {
   }
 })
 
-// _options.bootstrapList
-
-/*
-PeerId.createFromJSON(bootNode0Id,(err,bootNodeId) => {
-  if(err) console.log(err)
-  else {
-
-    const bootNodeInfo = new PeerInfo(bootNodeId)
-    bootNodeInfo.multiaddrs.add('/ip4/0.0.0.0/tcp/10333')
-    var bootNode = new Libp2pNode({
-      peerInfo: bootNodeInfo
-    })
-
-    bootNode.handle('/eh7/chat', (protocol, conn) => {
-      console.log("chat request to listener")
-    })
-
-    bootNode.on('peer:discovery', (peer) => {
-//      console.log("peer:discovery: ", peer)
-    })
-
-    bootNode.on('peer:connect', (peer) => {
-      console.log("peer:connect: ", peer)
-    })
-
-    bootNode.on('peer:disconnect', (peer) => {
-      console.log("peer:disconnect: ", peer)
-    })
-
-    bootNode.start((err) => {
-      if(err) {
-        console.log(err.message)
-        process.exit(1)
-      } else {
-        console.log('Boot Node ready, listening on:')
-        bootNodeInfo.multiaddrs.forEach((ma) => {
-          console.log(ma.toString())
-        })
-      }
-    })
-  }
-})
-*/
-
-/*
-PeerId.createFromJSON(require('./peer-id-dialer'),(err,dialerPeerId) => {
-
-  PeerId.createFromJSON(require('./peer-id-listener'),(err,listenerPeerId) => {
-
-    const listenerPeerInfo = new PeerInfo(listenerPeerId)
-    listenerPeerInfo.multiaddrs.add('/ip4/0.0.0.0/tcp/10333')
-    var listenerNode = new Libp2pNode({
-      peerInfo: listenerPeerInfo
-    })
-
-    listenerNode.handle('/eh7/chat', (protocol, conn) => {
-      console.log("chat request to listener")
-    })
-
-    listenerNode.start((err) => {
-//      console.log(err)
-
-      console.log('Listener ready, listening on:')
-
-      listenerPeerInfo.multiaddrs.forEach((ma) => {
-        console.log(ma.toString())
-      })
-
-      const dialerPeerInfo = new PeerInfo(dialerPeerId)
-      dialerPeerInfo.multiaddrs.add('/ip4/0.0.0.0/tcp/0')
-      var dialerNode = new Libp2pNode({
-        peerInfo: dialerPeerInfo
-      })
-
-      dialerNode.start((err) => {
-        if(err) {
-          console.log(err.message)
-          process.exit(1)
-        } else {
-          console.log('Dialer ready.')
-          dialerPeerInfo.multiaddrs.forEach((ma) => {
-            console.log(ma.toString())
-          })
-
-          console.log('Dialing Listener...')
-
-          dialerNode.dialProtocol(listenerNode.peerInfo,'/eh7/chat',(err,conn) => {
-             if(err) console.log(err)
-             else {
-               console.log("sending tx return")
-               pull(
-                 pull.values(["hello big"]),
-                 conn
-               )
-              console.log("(dialerNode) dialed to listener '/eh7/chat' -> hello")
-            }
-          })
-
-        }
-      })
-    })
-  })
-
-})
-*/
