@@ -18,7 +18,8 @@ const p = Pushable()
 
 const bootstrapers = [
 //  '/ip4/192.168.1.12/tcp/10333/ipfs/QmZiicp2DZuf9Xc9mNiMkc3hiDz4KipoiNzFZbhxLK9Do1',
-  '/ip4/10.0.0.10/tcp/10333/ipfs/QmZiicp2DZuf9Xc9mNiMkc3hiDz4KipoiNzFZbhxLK9Do1'
+//  '/ip4/10.0.0.10/tcp/10333/ipfs/QmZiicp2DZuf9Xc9mNiMkc3hiDz4KipoiNzFZbhxLK9Do1'
+  '/ip4/10.0.0.4/tcp/10333/ipfs/QmZiicp2DZuf9Xc9mNiMkc3hiDz4KipoiNzFZbhxLK9Do1'
 ]
 
 
@@ -58,6 +59,7 @@ const nodeId = require('./peer-id-dialer.json')
 let node
 
 PeerId.createFromJSON(nodeId,(err,nodeId) => {
+//PeerId.create((err,nodeId) => {
   if(err) console.log(err)
   else {
     const nodeInfo = new PeerInfo(nodeId)
@@ -111,6 +113,23 @@ PeerId.createFromJSON(nodeId,(err,nodeId) => {
 
     node.on('peer:connect', (peer) => {
       console.log('Connection established to:', peer.id.toB58String())
+
+      node.dialProtocol(peer.id,'/eh7/bootHello/0.0.1',(err,conn) => {
+        if(err) console.log(err)
+        else {
+          const gpioConfig = require("../conf/gpioConfig")
+          console.log("dial to '/eh7/bootHello/0.0.1' :: "  + gpioConfig)
+          pull(
+            pull.values([JSON.stringify(gpioConfig)]),
+            conn,
+            pull.collect((err, data) => {
+              if (err) { throw err }
+              console.log('data received: ', data.toString())
+            })
+          )
+        }
+      })
+
 
 /*
       node.dialProtocol(peer.id,'/eh7/chat',(err,conn) => {
