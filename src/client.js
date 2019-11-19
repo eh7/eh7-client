@@ -60,8 +60,8 @@ const nodeId = require('./peer-id-dialer.json')
 
 let node
 
-PeerId.createFromJSON(nodeId,(err,nodeId) => {
-//PeerId.create((err,nodeId) => {
+//PeerId.createFromJSON(nodeId,(err,nodeId) => {
+PeerId.create((err,nodeId) => {
   if(err) console.log(err)
   else {
     const nodeInfo = new PeerInfo(nodeId)
