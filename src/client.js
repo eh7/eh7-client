@@ -16,6 +16,8 @@ const pull = require('pull-stream')
 const Pushable = require('pull-pushable')
 const p = Pushable()
 
+const gpioConfig = require("../conf/gpioConfig")
+
 const bootstrapers = [
 //  '/ip4/192.168.1.12/tcp/10333/ipfs/QmZiicp2DZuf9Xc9mNiMkc3hiDz4KipoiNzFZbhxLK9Do1',
 //  '/ip4/10.0.0.10/tcp/10333/ipfs/QmZiicp2DZuf9Xc9mNiMkc3hiDz4KipoiNzFZbhxLK9Do1'
@@ -69,6 +71,51 @@ PeerId.createFromJSON(nodeId,(err,nodeId) => {
       peerInfo: nodeInfo
     })
 
+    node.handle('/eh7/getConfig/0.0.1', (protocol, conn) => {
+      console.log("handled /eh7/getConfig/0.0.1")
+      pull(
+        conn,
+        pull.map((data) => {
+          return data.toString('utf8').replace('\n', '')
+        }),
+        pull.drain((cmd) => {
+	  console.log("sending config")
+          pull(
+            pull.values([JSON.stringify(gpioConfig)]),
+            conn
+          )
+//          var exec = require('child_process').exec;
+
+//          exec(cmd, function callback(error, stdout, stderr){
+//            console.log("exec stdout-> ", error, stdout, stderr)
+//            pull(
+//              pull.values([stdout]),
+//              conn
+//            )
+//          })
+        })
+      )
+/*
+      pull(
+        conn,
+        pull.map((data) => {
+          return data.toString('utf8').replace('\n', '')
+        }),
+        pull.drain((cmd) => {
+	  console.log("cmd sent to me: " + cmd)
+          var exec = require('child_process').exec;
+          exec(cmd, function callback(error, stdout, stderr){
+            console.log("exec stdout-> ", error, stdout, stderr)
+            pull(
+              pull.values([stdout]),
+              conn
+            )
+          })
+        })
+      )
+*/
+    })
+
     node.handle('/eh7/cmd/0.0.1', (protocol, conn) => {
       console.log("handled /eh7/cmd/0.0.1")
       pull(
@@ -114,10 +161,10 @@ PeerId.createFromJSON(nodeId,(err,nodeId) => {
     node.on('peer:connect', (peer) => {
       console.log('Connection established to:', peer.id.toB58String())
 
+/*
       node.dialProtocol(peer.id,'/eh7/bootHello/0.0.1',(err,conn) => {
         if(err) console.log(err)
         else {
-          const gpioConfig = require("../conf/gpioConfig")
           console.log("dial to '/eh7/bootHello/0.0.1' :: "  + gpioConfig)
           pull(
             pull.values([JSON.stringify(gpioConfig)]),
@@ -129,7 +176,7 @@ PeerId.createFromJSON(nodeId,(err,nodeId) => {
           )
         }
       })
-
+*/
 
 /*
       node.dialProtocol(peer.id,'/eh7/chat',(err,conn) => {
