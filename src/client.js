@@ -3,12 +3,21 @@
 //const Libp2pNode = require('./libp2p-bundle.js')
 
 const libp2p = require('libp2p')
+const Ping = require('libp2p/src/ping')
 const TCP = require('libp2p-tcp')
 const Mplex = require('libp2p-mplex')
 const SECIO = require('libp2p-secio')
 const Bootstrap = require('libp2p-bootstrap')
 const Gossipsub = require('libp2p-gossipsub')
 const defaultsDeep = require('@nodeutils/defaults-deep')
+
+const fs = require('fs')
+const Protector = require('libp2p/src/pnet')
+const swarmKey = fs.readFileSync(process.argv[2])
+//console.log(swarmKey)
+const protector = new Protector(swarmKey)
+//console.log(protector)
+//process.exit()
 
 const PeerInfo = require('peer-info')
 const PeerId   = require('peer-id')
@@ -28,18 +37,24 @@ const bootstrapers = [
 class Libp2pNode extends libp2p {
   constructor (_options) {
     const defaults = {
+      switch: {
+        denyTTL: 5000,
+        denyAttempts: 10
+      },
       modules: {
         transport: [ TCP ],
         streamMuxer: [ Mplex ],
         connEncryption: [ SECIO ],
         peerDiscovery: [ Bootstrap ],
-        pubsub: Gossipsub
+        pubsub: Gossipsub,
+        connProtector: protector
       },
       config: {
         peerDiscovery: {
           autoDial: true,
           bootstrap: {
-            interval: 20e3,
+//            interval: 20e3,
+            interval: 30000,
             enabled: true,
             list: bootstrapers
           }
@@ -53,6 +68,42 @@ class Libp2pNode extends libp2p {
 
     super(defaultsDeep(_options, defaults))
   }
+
+  ping (remotePeerInfo, callback) {
+    const p = new Ping(this._switch, remotePeerInfo)
+    p.on('ping', time => {
+      p.stop() // stop sending pings
+      callback(null, time)
+    })
+    p.on('error', callback)
+    p.start()
+  }
+}
+
+
+function pingRemotePeer(localPeer, remotePeerInfo) {
+  console.log("ping remote host local: ", localPeer.peerInfo.id.toB58String())
+  console.log("ping remote host remote: ", remotePeerInfo.id.toB58String())
+//console.log(remotePeerInfo.multiaddrs)
+//  const remoteAddr = multiaddr(process.argv[2])
+//  console.log('pinging remote peer at ', .toString())
+  
+/*
+  // Convert the multiaddress into a PeerInfo object
+  const peerId = PeerId.createFromB58String(remoteAddr.getPeerId())
+  const remotePeerInfo = new PeerInfo(peerId)
+  remotePeerInfo.multiaddrs.add(remoteAddr)
+*/
+
+
+  console.log('pinging remote peer at ')//, remoteAddr.toString())
+  localPeer.ping(remotePeerInfo, (err, time) => {
+    if (err) {
+      return console.error('error pinging: ', err)
+    }
+//    console.log(`pinged ${remoteAddr.toString()} in ${time}ms`)
+    console.log(`pinged ${remotePeerInfo.id.toB58String()} in ${time}ms`)
+  })
 }
 
 
@@ -149,10 +200,43 @@ PeerId.create((err,nodeId) => {
           console.log(`PUBSUB) -> recieved:  ${msg.data.toString()}`)
         })
         console.log("Node listening on 'info' pubsub channel.")
+console.log(node)
       }
     })
 
+    node.on('connection:start', (peer) => {console.log('Connection started:', peer.id.toB58String())})
+    node.on('connection:end', (peer) => {console.log('Connection ended:', peer.id.toB58String())})
+
+    node.on('error', (err) => {
+      console.log('Error: ', err)
+    })
+
     node.on('peer:discovery', (peer) => {
+      console.log('Connection discovered to:', peer.id.toB58String())
+      console.log(node.stats.peers())
+      console.log(node.peerBook)
+      pingRemotePeer(node, peer)
+/*
+      node.ping(peer, (err,ping) => {
+        if(err)
+          console.log(err)
+        console.log("ping: ", ping)
+      })
+*/
+
+//      node.hangUp(peer, (err) => {
+//        console.log("hu: ", err)
+
+//        node.dial(peer, (err, conn) => {
+//          console.log(err)
+//        })
+
+//      })
+//      node.dial(peer.id, (err, conn) => {
+//        if(err)
+//          console.log("Dialed to peer err " + err)
+//        console.log("Dialed to peer " + peer.id.toB58String())
+//      })
       // No need to dial, autoDial is on
 //      console.log('Discovered:', peer.id.toB58String())
 //      node.pubsub.publish('info', Buffer.from('discovered ' +  peer.id.toB58String() + ' here!!!'), (err) => {if(err)console.log(err)})
