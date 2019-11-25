@@ -213,8 +213,8 @@ console.log(node)
 
     node.on('peer:discovery', (peer) => {
       console.log('Connection discovered to:', peer.id.toB58String())
-      console.log(node.stats.peers())
-      console.log(node.peerBook)
+//      console.log(node.stats.peers())
+//      console.log(node.peerBook)
       pingRemotePeer(node, peer)
 /*
       node.ping(peer, (err,ping) => {
