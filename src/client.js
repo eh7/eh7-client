@@ -1,5 +1,10 @@
 'use strict'
 
+if(!process.argv[2]){
+  console.log("USAGE: node src/client.js ", "<path to swarm.key>")
+  process.exit(1)
+}
+
 //const Libp2pNode = require('./libp2p-bundle.js')
 
 const libp2p = require('libp2p')
